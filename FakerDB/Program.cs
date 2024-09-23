@@ -263,102 +263,7 @@ namespace FakerDB
             }
             return m;
         }
-            string AdaptarFecha(string fecha)
-            {
-                string[] newDate = fecha.Split("/");
-
-                return $"{newDate[2]}-{newDate[1]}-{newDate[0]}";
-            }
-
-            string genCad(char[] cad) {
-                
-                object[] random = getNumberRandomGen();
-                string newCad = "";
-                //int selIndex;
-                char charSelected;
-                bool capitalize;
-                
-                //Console.WriteLine("LIMITE EN BUCLE:" + random[0]);
-                for (int index = 0; index < (int)random[0]; index++)
-                {
-                    //selIndex=RandomNumber.Next(0, this.caracteresASeleccionar.Length);
-                    charSelected = fk.PickRandom(cad);
-                    capitalize = RandomNumber.Next(0, 1) == 0;
-                    //Console.WriteLine("__caracter= " + charSelected);
-                    if (capitalize || random[1].ToString()=="M")
-                    {
-                        try
-                        {
-                            charSelected= char.ToUpper(charSelected);
-                        }
-                        catch (Exception){}
-                    }
-                    newCad += charSelected;
-                }
-
-                return newCad;
-                
-            }
-            void AddLongitud(object longitudObj)
-            {
-                this.rangesOfNumberGen.Add(longitudObj);
-            }
-            string[] LimiteHasALetter(string limite,int index=0) {
-                for(index=index; index < this.LettersConfig.Length; index++)
-                {
-                    if (limite.Contains(this.LettersConfig[index]))
-                    {
-                        return [this.LettersConfig[index],$"{index}"];
-                    }
-                }
-                return ["",null];
-            }
-            
-            object[] getNumberRandomGen()
-            {
-                int limite;
-                object containsLetter = "";
-
-                string lim = this.rangesOfNumberGen[this.indexOfNumberGen].ToString();
-                //Console.WriteLine("LIM EN LISTA:" + lim);
-                string letter = LimiteHasALetter(lim)[0];
-                if (letter!="")
-                {
-                    //es el limite pero en digito mas alto a sacar
-                    limite = Convert.ToInt32(lim.Replace(letter, ""));
-                    containsLetter = letter;
-                }
-                else
-                {
-                    //el limite esta en digitos que puede contener
-                    //limite = (Math.Pow(10, Convert.ToInt64(lim)));
-                    limite = Convert.ToInt32(lim);
-                }
-
-                this.indexOfNumberGen += 1;
-                return [limite, containsLetter];
-
-                //return (RandomNumber.Next(0, limite)).ToString();
-
-            }
-            string initCadena(int tipo_inicio)
-            {
-                string cad = "";
-                switch (tipo_inicio)
-                {
-                    case 1:
-                        cad="abcdefghijllmnñopqrstuvwxyz";
-                        break;
-                    case 2:
-                        cad="1234567890";
-                        break;
-                    case 3:
-                        cad=  "¡!#$%&@<>~|()[]{}°¿?_+-/*=";
-                        break;
-                }
-                return cad;
-            }
-
+        
         public FillDB(string db,string table,string campos,int repetitions, string servidor = null)
         {
             //db = "Practicas";
@@ -406,6 +311,103 @@ namespace FakerDB
             }
         }
 
+        string AdaptarFecha(string fecha)
+        {
+            string[] newDate = fecha.Split("/");
+
+            return $"{newDate[2]}-{newDate[1]}-{newDate[0]}";
+        }
+
+        string genCad(char[] cad)
+        {
+
+            object[] random = getNumberRandomGen();
+            string newCad = "";
+            //int selIndex;
+            char charSelected;
+            bool capitalize;
+
+            //Console.WriteLine("LIMITE EN BUCLE:" + random[0]);
+            for (int index = 0; index < (int)random[0]; index++)
+            {
+                //selIndex=RandomNumber.Next(0, this.caracteresASeleccionar.Length);
+                charSelected = fk.PickRandom(cad);
+                capitalize = RandomNumber.Next(0, 1) == 0;
+                //Console.WriteLine("__caracter= " + charSelected);
+                if (capitalize || random[1].ToString() == "M")
+                {
+                    try
+                    {
+                        charSelected = char.ToUpper(charSelected);
+                    }
+                    catch (Exception) { }
+                }
+                newCad += charSelected;
+            }
+
+            return newCad;
+
+        }
+        void AddLongitud(object longitudObj)
+        {
+            this.rangesOfNumberGen.Add(longitudObj);
+        }
+        string[] LimiteHasALetter(string limite, int index = 0)
+        {
+            for (index = index; index < this.LettersConfig.Length; index++)
+            {
+                if (limite.Contains(this.LettersConfig[index]))
+                {
+                    return [this.LettersConfig[index], $"{index}"];
+                }
+            }
+            return ["", null];
+        }
+
+        object[] getNumberRandomGen()
+        {
+            int limite;
+            object containsLetter = "";
+
+            string lim = this.rangesOfNumberGen[this.indexOfNumberGen].ToString();
+            //Console.WriteLine("LIM EN LISTA:" + lim);
+            string letter = LimiteHasALetter(lim)[0];
+            if (letter != "")
+            {
+                //es el limite pero en digito mas alto a sacar
+                limite = Convert.ToInt32(lim.Replace(letter, ""));
+                containsLetter = letter;
+            }
+            else
+            {
+                //el limite esta en digitos que puede contener
+                //limite = (Math.Pow(10, Convert.ToInt64(lim)));
+                limite = Convert.ToInt32(lim);
+            }
+
+            this.indexOfNumberGen += 1;
+            return [limite, containsLetter];
+
+            //return (RandomNumber.Next(0, limite)).ToString();
+
+        }
+        string initCadena(int tipo_inicio)
+        {
+            string cad = "";
+            switch (tipo_inicio)
+            {
+                case 1:
+                    cad = "abcdefghijllmnñopqrstuvwxyz";
+                    break;
+                case 2:
+                    cad = "1234567890";
+                    break;
+                case 3:
+                    cad = "¡!#$%&@<>~|()[]{}°¿?_+-/*=";
+                    break;
+            }
+            return cad;
+        }
 
         bool buscarFunciones(string campos)
         {
