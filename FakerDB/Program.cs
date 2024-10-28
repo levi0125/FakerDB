@@ -14,6 +14,7 @@ namespace FakerDB
     {
         public delegate string Metodo();
         Bogus.Faker fk = new Bogus.Faker("es");
+        public ConexionSQL cx;
 
         bool resultado;
         int indexOfNumberGen = 0;
@@ -23,7 +24,7 @@ namespace FakerDB
         List<string> dataTypes = new List<string>();
         List<int> largos = new List<int>();
 
-        string[] Materias;
+        string[] Materias,oficios;
         string caracteresASeleccionar;
         string[] LettersConfig = {"m","M"};
         Metodo textoToRandom(string dato, object longitudObj) {
@@ -216,6 +217,24 @@ namespace FakerDB
                         return fk.PickRandom(this.Materias);
                     };
                     break;
+                case "oficio":
+                    this.oficios = [
+                        "Carpintero",
+                        "Plomero",
+                        "Electricista",
+                        "Pintor",
+                        "Chef",
+                        "Mecánico",
+                        "Programador",
+                        "Diseñador Gráfico",
+                        "Abogado",
+                        "Doctor"
+                    ];
+                    m = delegate
+                    {
+                        return fk.PickRandom(this.oficios);
+                    };
+                    break;
                 case "letras":
                     AddLongitud(longitudObj);
 
@@ -264,7 +283,7 @@ namespace FakerDB
             return m;
         }
         
-        public FillDB(string db,string table,string campos,int repetitions, string servidor = null)
+        public void makeInserts(string table,string campos,int repetitions,bool enviarQuery=true)
         {
             //db = "Practicas";
             if (buscarFunciones(campos))
@@ -291,10 +310,15 @@ namespace FakerDB
                 }
 
                 Console.WriteLine("query="+query);
-                try
+                if (!enviarQuery)
                 {
-                    ConexionSQL conexion = new ConexionSQL(db, servidor);
-                    conexion.ejecutarQuery(query);
+                    return;
+                }
+	
+	cx.Open();
+                try
+                { 
+                    cx.ejecutarQuery(query);
 
                     resultado = true;
                 }
@@ -302,13 +326,84 @@ namespace FakerDB
                 {
                     resultado = false;
                 }
-                
+                cx.Close();
             }
             else
             {
                 Console.WriteLine("ERROR AL BUSCAR LAS FUNCIONES");
                 resultado = false;
             }
+        }
+
+        public void alterTable(string table,string campoID,string campoAlterar,string camposConfiguracion,string condicion)
+        {
+           bool res =cx.Open();
+            if (!res)
+            {
+                Console.WriteLine("No se pudo Abrir Conexion en ALter");
+                return;
+            }
+            Console.WriteLine("Antes de Alter");
+           makeAlter(table,campoID,campoAlterar,condicion,camposConfiguracion);              
+           cx.Close();
+        }
+        private bool makeAlter(string table,string campoID,string campoAlterar,string condicion,string camposConfiguracion)
+        {
+            if(this.cx.ejecutarQuery($"select {campoAlterar} from {table} where {campoID} and {condicion} ",3)==false)
+            {
+                Console.WriteLine("NO EXISTEN LOS CAMPOS PROPORCIONADOS");
+                return false;// no existen los campos ingresados
+            }
+            if(!buscarFunciones(camposConfiguracion))
+            {
+                Console.WriteLine("HUBO  UN ERROR EN EL FORMATO EN LA CONFIGURACION PROPORCIONADA");
+                return false;
+            }
+            String strSQL = $"SELECT {campoID}  FROM {table}";
+            
+        	string[] campos=campoAlterar.Split(',');
+
+            if (!cx.ejecutarQuery(strSQL, 4,table))
+            {
+                Console.WriteLine("NO HAY REGISTROS");
+                return false;
+            }
+            try
+            {
+                int columnas= cx.datos.Tables[table].Rows.Count;
+                Console.WriteLine("A PUNTO DE ALTERAR");
+                for(int index=0;index< columnas;index++)
+                {
+                    string[] random = ObtenerResultadoSDeAleatorio();
+                   
+                    //Console.WriteLine($"columnas[{campoAlterar}]=resultados[{random.ToString()}]");
+                    cx.AlterRow(table, index, campos, random);
+                    
+                }
+                cx.actualizarCambios(table);
+                return true;
+            }catch(Exception ex)
+            {
+                Console.WriteLine("ERROR EN ACTUALIZAR", ex.Message);
+                return false;
+            }
+
+        }
+        public string[] ObtenerResultadoSDeAleatorio()
+        {
+            int funcLarge = this.funciones.Count();
+            string[] resultados = new string[funcLarge];
+
+            for (int indexFunc = 0; indexFunc < funcLarge; indexFunc++)
+            {
+                //query += $"set ${nombres[indexFunc]} = {dataTypes[indexFunc]}{executeFunction(indexFunc) }{dataTypes[indexFunc]}" ;
+                resultados[indexFunc] = $"{dataTypes[indexFunc]}{executeFunction(indexFunc)}{dataTypes[indexFunc]}";
+            }
+	        return resultados;
+        }
+        public  FillDB(string db, string servidor = null)
+        {
+            this.cx = new ConexionSQL(db,servidor);
         }
 
         string AdaptarFecha(string fecha)
@@ -354,7 +449,7 @@ namespace FakerDB
         }
         string[] LimiteHasALetter(string limite, int index = 0)
         {
-            for (index = index; index < this.LettersConfig.Length; index++)
+            for (index=index ; index < this.LettersConfig.Length; index++)
             {
                 if (limite.Contains(this.LettersConfig[index]))
                 {
